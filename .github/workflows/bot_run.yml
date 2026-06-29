@@ -1,0 +1,20 @@
+name: Run Bot
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install
+        run: |
+          pip install yfinance backtesting requests
+          pip install git+https://github.com/twopirllc/pandas-ta.git
+      - name: Execute
+        run: python my_bot.py
