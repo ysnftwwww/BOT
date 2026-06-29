@@ -10,8 +10,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - name: Install
+      - name: Install dependencies
         run: |
-          pip install yfinance backtesting requests
+          pip install yfinance backtesting requests pandas numpy
       - name: Execute
         run: python my_bot.py
