@@ -1,5 +1,4 @@
 import yfinance as yf
-import pandas_ta as ta
 from backtesting import Backtest, Strategy
 from backtesting.lib import crossover
 import requests
