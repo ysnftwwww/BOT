@@ -2,61 +2,39 @@ import yfinance as yf
 import pandas_ta as ta
 from backtesting import Backtest, Strategy
 from backtesting.lib import crossover
+import requests
 
-# --- 1. جلب البيانات ---
-# نستخدم البيانات التاريخية للبيتكوين (يمكنك تغيير "BTC-USD" لأي عملة أخرى)
-data = yf.download("BTC-USD", period="1mo", interval="1h")
+# 1. إعدادات التليجرام
+TELEGRAM_TOKEN = 'توكن_البوت_متاعك'
+CHAT_ID = 'الايدي_متاعك'
 
-# تنظيف البيانات: التأكد من عدم وجود قيم فارغة (NaN)
-data.dropna(inplace=True)
+def send_msg(text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={text}"
+    requests.get(url)
 
-# --- 2. تعريف الاستراتيجية ---
+# 2. الاستراتيجية
 class SupertrendStrategy(Strategy):
-    # الإعدادات (نفس قيمك في Pine Script)
-    st_period = 10
-    st_factor = 3.0
-    atr_period = 14
-    atr_mult = 1.5
-    rr = 1.5
-
     def init(self):
-        # حساب السوبر تريند باستخدام pandas_ta
-        # المخرجات تكون: [SUPERT, SUPERTd, SUPERTl, SUPERTs]
-        # نحن نهتم بالعمود الثاني [SUPERTd] الذي يمثل الاتجاه
-        st = self.I(ta.supertrend, self.data.High, self.data.Low, self.data.Close, 
-                    length=self.st_period, multiplier=self.st_factor)
-        
-        self.st_dir = st[:, 1]  # اتجاه التريند
-        self.atr = self.I(ta.atr, self.data.High, self.data.Low, self.data.Close, length=self.atr_period)
+        st = self.I(ta.supertrend, self.data.High, self.data.Low, self.data.Close, length=10, multiplier=3.0)
+        self.st_dir = st[:, 1]
+        self.atr = self.I(ta.atr, self.data.High, self.data.Low, self.data.Close, length=14)
 
     def next(self):
-        # منطق الدخول (شراء/بيع)
-        # crossover تعني تقاطع القيمة مع الصفر
-        if crossover(self.st_dir, 0): 
-            # حساب مستويات الصفقة
-            sl = self.data.Close[-1] - (self.atr[-1] * self.atr_mult)
-            tp = self.data.Close[-1] + ((self.data.Close[-1] - sl) * self.rr)
-            # تنفيذ الشراء
-            self.buy(sl=sl, tp=tp)
-            
+        # حساب الأداء الحالي
+        stats = self.stats
+        summary = f"📈 Win Rate: {stats['Win Rate [%]']:.1f}% | Trades: {stats['# Trades']}"
+        
+        if crossover(self.st_dir, 0):
+            send_msg(f"🚀 إشارة شراء (Long)\n{summary}")
         elif crossover(0, self.st_dir):
-            # حساب مستويات الصفقة
-            sl = self.data.Close[-1] + (self.atr[-1] * self.atr_mult)
-            tp = self.data.Close[-1] - ((sl - self.data.Close[-1]) * self.rr)
-            # تنفيذ البيع
-            self.sell(sl=sl, tp=tp)
+            send_msg(f"🔻 إشارة بيع (Short)\n{summary}")
 
-# --- 3. تشغيل الباك تست ---
-# cash: رأس المال الابتدائي
-# commission: عمولة المنصة (0.1% مثلاً هي 0.001)
-bt = Backtest(data, SupertrendStrategy, cash=10000, commission=.001, exclusive_orders=True)
-
-# --- 4. استخراج النتائج ---
-stats = bt.run()
-
-# طباعة التقرير الكامل
-print("--- تقرير أداء الاستراتيجية ---")
-print(stats)
-
-# رسم النتائج (سيفتح صفحة ويب بها الشارت والصفقات)
-bt.plot()
+# 3. التشغيل الرئيسي
+if __name__ == "__main__":
+    data = yf.download("BTC-USD", period="1mo", interval="1h")
+    bt = Backtest(data, SupertrendStrategy, cash=10000, commission=.001)
+    stats = bt.run()
+    
+    # تشغيل الاستراتيجية مرة واحدة فقط لآخر شمعة
+    SupertrendStrategy.stats = stats # نمرر النتائج للكلاس
+    bt.run()
