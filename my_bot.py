@@ -5,7 +5,7 @@ from backtesting import Backtest, Strategy
 import requests
 
 # إعدادات التليجرام
-TELEGRAM_TOKEN = '8810137643:AAHmPL3qSAIlIgNC6c9JV7jHjR8H6TDpsFow'
+TELEGRAM_TOKEN = '8810137643:AAHmPL3qSAIIgNC6c9JV7jHjR8H6TDpsFow'
 CHAT_ID = '8377483931'
 
 def send_msg(text):
