@@ -5,8 +5,8 @@ from backtesting.lib import crossover
 import requests
 
 # 1. إعدادات التليجرام
-TELEGRAM_TOKEN = 'توكن_البوت_متاعك'
-CHAT_ID = 'الايدي_متاعك'
+TELEGRAM_TOKEN = '8810137643:AAHmPL3qSAIIgNC6c9JV7jHjR8H6TDpsFow'
+CHAT_ID = '8377483931'
 
 def send_msg(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={text}"
